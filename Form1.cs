@@ -10,13 +10,11 @@ namespace CsMarchingSquares
     public partial class Form1 : Form
     {
         private PictureBox pcbCanvas = null;
-
         private int pointDistance = 32;
         private MsqAlgorithm marchingSquaresAlgorithm = null;
+        private MsqRenderer renderer = null;
 
-        Timer tmr = new Timer();
-
-        int t = 0;
+        private List<MsqPoint> debugPoints = new List<MsqPoint>();
 
         public Form1()
         {
@@ -52,38 +50,21 @@ namespace CsMarchingSquares
             this.marchingSquaresAlgorithm = new MsqAlgorithm(this.Width, this.Height, 32);
 
             // Generate and set the algorithm points
-            List<MsqPoint> algoPoints = this.GeneratePoints();
-            this.marchingSquaresAlgorithm.SetPoints(algoPoints);
-
-            tmr.Tick += this.Tick;
-            tmr.Interval = 10;
-            tmr.Start();
-        }
-
-        private void Tick(Object sender, EventArgs e)
-        {
-            this.pcbCanvas.Refresh();
-
-            if(this.t < this.marchingSquaresAlgorithm.squaresToMarch.Count)
-            {
-                this.t += 1;
-            }
-            else
-            {
-                this.t = 0;
-            }
+            List<MsqPoint> algoPoints = this.GeneratePoints(1, 0);
+            this.marchingSquaresAlgorithm.SetPoints(algoPoints, 1, 0);
+            this.marchingSquaresAlgorithm.RunOnce();
         }
 
         /// <summary>
         /// Creates and returns a list of points that can be used by the algorithm.
         /// </summary>
-        private List<MsqPoint> GeneratePoints()
+        private List<MsqPoint> GeneratePoints(int a_padX = 0, int a_padY = 0)
         {
             // Create a point list to feed to the algorithm
             List<MsqPoint> algoPoints = new List<MsqPoint>();
-            for(int y = 0; y <= (this.Height / this.pointDistance) + 2; y += 1)
+            for(int y = 0; y < (this.Height / this.pointDistance) + a_padY; y += 1)
             {
-                for(int x = 0; x <= (this.Width / this.pointDistance) + 2; x += 1)
+                for(int x = 0; x < (this.Width / this.pointDistance) + a_padX; x += 1)
                 {
                     // Create the color
                     Random rng = new Random();
@@ -104,11 +85,31 @@ namespace CsMarchingSquares
 
         private void Draw(Object a_sender, PaintEventArgs a_e)
         {
-            // this.DrawSquares(a_e);
-            this.DrawPoints(a_e);
+            if(this.renderer == null)
+                this.renderer = new MsqRenderer(a_e);
 
-            this.DrawSquare(this.t, a_e);
+            this.renderer.Render(this.marchingSquaresAlgorithm);
+
+            // this.DrawSquares(a_e);
+            // this.DrawPoints(a_e);
+            // this.DebugDraw(a_e);
         }
+
+        private void DrawSquares(PaintEventArgs a_e)
+        {
+            Brush brush = new SolidBrush(Color.Black);
+            Pen pen = new Pen(brush, 1);
+
+            foreach(MsqSquare square in this.marchingSquaresAlgorithm.squaresToMarch)
+            {
+                // Console.WriteLine($"tl: {square.topLeft.x} br: {square.bottomRight.x} w: {square.width} h: {square.height}");
+
+                pen.Color = Color.Black;
+                a_e.Graphics.FillRectangle(brush, new Rectangle(square.topLeft.x, square.topLeft.y, square.width - 1, square.height - 1));
+            }
+        }
+
+        #region ACTUAL_DEBUG_CODE
 
         private void DrawSquare(int a_index, PaintEventArgs a_e)
         {
@@ -121,19 +122,7 @@ namespace CsMarchingSquares
             a_e.Graphics.FillRectangle(brush, new Rectangle(square.topLeft.x, square.topLeft.y, square.width - 1, square.height - 1));
         }
 
-        private void DrawSquares(PaintEventArgs a_e)
-        {
-            Brush brush = new SolidBrush(Color.Black);
-            Pen pen = new Pen(brush, 1);
-
-            foreach(MsqSquare square in this.marchingSquaresAlgorithm.squaresToMarch)
-            {
-                Console.WriteLine($"tl: {square.topLeft.x} br: {square.bottomRight.x} w: {square.width} h: {square.height}");
-
-                pen.Color = Color.Black;
-                a_e.Graphics.FillRectangle(brush, new Rectangle(square.topLeft.x, square.topLeft.y, square.width - 1, square.height - 1));
-            }
-        }
+        #endregion
 
         private void DrawPoints(PaintEventArgs a_e)
         {
@@ -161,5 +150,39 @@ namespace CsMarchingSquares
                 a_e.Graphics.DrawRectangle(pen, new Rectangle(bottomRight.x, bottomRight.y, 8, 8));
             }
         }
+
+        #region DEBUG_CODE_REUSE_FOR_LATER_MAYBE
+
+        // private void DebugDraw(PaintEventArgs a_e)
+        // {
+        //     int pointAmountX = (this.Width / this.pointDistance);
+        //     int pointAmountY = (this.Height / this.pointDistance);
+
+        //     Console.WriteLine($"xa: {pointAmountX} ya: {pointAmountY}");
+
+        //     Brush brush = new SolidBrush(Color.Black);
+        //     Pen pen = new Pen(brush, 1);
+
+        //     for(int y = 0; y < pointAmountY + 2; y += 1)
+        //     {
+        //         for(int x = 0; x < pointAmountX + 2; x += 1)
+        //         {
+        //             if(x + 1 < pointAmountX && y + 1 < pointAmountY)
+        //             {
+        //                 int topLeftIndex = x + (y * pointAmountX);
+        //                 int topRightIndex = (x + 1) + (y * pointAmountX);
+        //                 int bottomLeftIndex = x + ((y + 1) * pointAmountX);
+        //                 int bottomRightIndex = (x + 1) + ((y + 1) * pointAmountX);
+
+        //                 MsqSquare square = new MsqSquare(this.debugPoints[topLeftIndex], this.debugPoints[topRightIndex], this.debugPoints[bottomLeftIndex], this.debugPoints[bottomRightIndex]);
+        //                 a_e.Graphics.FillRectangle(brush, new Rectangle(square.topLeft.x, square.topLeft.y, square.width, square.height));
+        //             }
+        //         }
+        //     }
+
+
+        // }
+
+        #endregion
     }
 }
