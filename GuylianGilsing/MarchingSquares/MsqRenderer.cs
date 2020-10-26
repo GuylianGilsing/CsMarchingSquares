@@ -5,9 +5,7 @@ namespace GuylianGilsing.MarchingSquares
 {
     class MsqRenderer
     {
-        private Graphics graphics = null;
         private Brush brush = new SolidBrush(Color.White);
-        private Pen pen = null;
 
         public void Render(MsqAlgorithm a_algo, PaintEventArgs a_e)
         {
