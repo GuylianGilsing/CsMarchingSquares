@@ -12,7 +12,7 @@ namespace CsMarchingSquares
     {
         private PictureBox pcbCanvas = null;
         private int pointDistance = 4;
-        private int simSpeed = 50;
+        private int simSpeed = 1;
         private MsqAlgorithm marchingSquaresAlgorithm = null;
         private MsqRenderer renderer = new MsqRenderer();
         private Timer tmrUpdateCanvas = new Timer();
